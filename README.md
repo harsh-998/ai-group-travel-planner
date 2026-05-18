@@ -1,218 +1,131 @@
-# WayFinder 🌍✈️
+# WayFinder
 
-WayFinder is an AI-powered collaborative travel planning platform that helps solo travelers and groups create smart, personalized, and optimized trip itineraries with minimal effort.
+WayFinder is an AI-powered collaborative travel planning platform. It combines group trip planning, itinerary generation, route-aware recommendation logic, validation, partial regeneration, and a local mock AI pipeline for evaluating travel intelligence before connecting production AI/provider APIs.
 
-Instead of manually coordinating plans across chats, spreadsheets, reels, and maps, WayFinder combines AI-driven recommendations, collaborative decision-making, itinerary optimization, and intelligent travel discovery into one seamless platform.
+## Current Focus
 
----
+The project is currently focused on making Jaipur itinerary generation feel locally intelligent, geographically smooth, emotionally paced, weather-aware, realistic, and explainable.
 
-# 🚀 Vision
+The Jaipur seed dataset now contains 129 curated place-intelligence records covering:
 
-Planning trips with friends is chaotic.
-
-Different budgets.  
-Different interests.  
-Different schedules.  
-Too many options.  
-
-WayFinder aims to solve this by acting like an intelligent travel coordinator that understands:
-- group preferences
-- travel styles
-- budgets
-- trip constraints
-- activity interests
-- route optimization
-- collaborative voting
-
-and generates optimized travel plans automatically.
-
----
-
-# ✨ Core Features
-
-## 🧠 AI-Powered Itinerary Generation
-Generate personalized day-wise itineraries using AI based on:
-- destination
-- travel dates
-- budget
-- group size
-- travel pace
-- interests
-- constraints
-
----
-
-## 👥 Collaborative Group Planning
-Invite friends and plan trips together.
-
-Group members can:
-- add preferences
-- vote on activities
-- review suggestions
-- modify plans collaboratively
-
----
-
-## 📍 Smart Recommendations
-AI suggests:
-- attractions
-- cafes
-- restaurants
-- hidden gems
-- adventure spots
+- landmarks and heritage
+- cafes and local food
+- markets and craft areas
+- viewpoints and sunset stops
+- cultural spots and workshops
 - nightlife
-- local experiences
+- filler, recovery, arrival, and departure-safe places
+- weather-safe alternatives
+- locality clusters and nearby-place relationships
 
-based on group compatibility and travel style.
+## Tech Stack
 
----
+- Frontend: Vite, React, Tailwind CSS
+- Backend: Node.js, Express, MongoDB/Mongoose
+- AI planning sandbox: local Node.js mock pipeline
+- Local database: MongoDB on `mongodb://127.0.0.1:27017/travelApp`
 
-## ⚡ Optimization Engine
-WayFinder optimizes:
-- travel time
-- route efficiency
-- budget allocation
-- daily energy load
-- activity clustering
+## Local Development
 
-to create realistic and balanced itineraries.
+From the repository root:
 
----
+```bash
+npm run install:all
+```
 
-## 🗳️ Consensus & Voting System
-The platform identifies:
-- shared interests
-- conflicting preferences
-- group compatibility
+Then start the full local app:
 
-and helps groups make decisions faster.
+```bash
+npm run dev
+```
 
----
+This starts:
 
-## 🔍 Retrieval-Augmented Recommendations (Planned)
-Future versions will support:
-- embeddings
-- semantic retrieval
-- curated travel datasets
-- retrieval-augmented generation (RAG)
+- MongoDB on `127.0.0.1:27017` when available
+- backend API on `http://localhost:5000`
+- frontend on `http://127.0.0.1:5173`
 
-for smarter and more context-aware recommendations.
+Open the app at:
 
----
+```text
+http://127.0.0.1:5173
+```
 
-# 🛠️ Tech Stack
+If `npm run dev` cannot start MongoDB, install MongoDB Community Server or make sure `mongod` is available on your PATH. The backend can still boot with `REQUIRE_DB=false`, but DB-backed auth/group routes need MongoDB.
 
-## Frontend
-- Next.js
-- React
-- Tailwind CSS
+## Manual Local Commands
 
-## Backend
-- Node.js
-- Express / Next API Routes
+Start MongoDB only:
 
-## Database
-- SQLite (MVP)
-- PostgreSQL (Future)
+```bash
+npm run dev:mongo
+```
 
-## AI Layer
-- OpenAI / Gemini / Claude APIs
-- Structured Prompt Engineering
-- Recommendation & Ranking Engine
+Start the backend only:
 
-## Future AI Infrastructure
-- Vector Databases
-- Embedding Pipelines
-- Retrieval Systems
-- Optimization Models
+```bash
+npm run dev:server
+```
 
----
+Start the frontend only:
 
-# 📦 MVP Scope
+```bash
+npm run dev:client
+```
 
-The MVP focuses on:
-- solo + group trip creation
-- collaborative planning
-- AI itinerary generation
-- activity recommendations
-- voting system
-- day-wise scheduling
-- optimization logic
-- responsive UI
+Build the frontend:
 
-with mocked APIs and lightweight local persistence for rapid development.
+```bash
+npm run build
+```
 
----
+## Environment Files
 
-# 🧱 Core Architecture
+Frontend:
 
-WayFinder uses a modular schema-based architecture consisting of:
-- User
-- Trip
-- Preferences
-- Activities
-- Recommendations
-- Votes
-- Day Plans
-- AI Responses
-- Optimization Results
+```bash
+copy client\.env.example client\.env
+```
 
-This enables scalable AI orchestration and future expansion into retrieval and recommendation systems.
+Backend:
 
----
+```bash
+copy server\.env.example server\.env
+```
 
-# AI System Blueprint
+The local mock planning pipeline does not require AI API keys. Legacy AI endpoints can use `GROQ_API_KEY`, `OPENAI_API_KEY`, or `GEMINI_API_KEY` when configured.
 
-The main AI architecture, recommendation logic, retrieval flow, ranking system, optimization modes, validation rules, and hallucination-prevention strategy are documented in:
+## Jaipur Intelligence Checks
 
-[docs/WAYFINDER_AI_PIPELINE_DOCUMENTATION.md](docs/WAYFINDER_AI_PIPELINE_DOCUMENTATION.md)
+Audit the curated Jaipur seed:
 
-The local mock implementation for testing retrieval, scoring, optimization, itinerary JSON generation, and validation is available in:
+```bash
+npm run audit:jaipur
+```
 
-[mock_ai_pipeline/](mock_ai_pipeline/)
+Run all mock planning evaluation scenarios:
 
----
+```bash
+npm run evaluate
+```
 
-# 🎯 Long-Term Goals
+You can also run a specific mock pipeline scenario:
 
-WayFinder is being designed as more than just a travel app.
+```bash
+node mock_ai_pipeline/runMockPipeline.js jaipur
+node mock_ai_pipeline/runMockPipeline.js jaipur_luxury_couple
+node mock_ai_pipeline/runMockPipeline.js jaipur_low_energy_family
+```
 
-Future directions include:
-- real-time collaborative trip rooms
-- intelligent budget prediction
-- smart hotel & transport integration
-- AI travel memory
-- personalized recommendation systems
-- autonomous itinerary optimization
-- social/community travel discovery
-- full AI travel assistant ecosystem
+## Important Project Paths
 
----
+- `client/` - Vite React frontend
+- `server/` - Express API and Mongo-backed routes
+- `mock_ai_pipeline/` - local retrieval, ranking, optimization, validation, explanation, and evaluation sandbox
+- `mock_ai_pipeline/data/jaipurPlaceIntelligence.js` - curated Jaipur seed dataset
+- `mock_ai_pipeline/data/jaipurEvaluationPersonas.js` - Jaipur persona test suite
+- `docs/WAYFINDER_AI_PIPELINE_DOCUMENTATION.md` - AI pipeline architecture and product logic
 
-# ⚙️ Development Status
+## License
 
-🚧 Currently in active development.
-
-The project is presently focused on:
-- schema architecture
-- AI recommendation pipelines
-- itinerary generation systems
-- collaborative planning workflows
-- optimization engine design
-
----
-
-# 🤝 Contributors
-
-Built by passionate developers exploring:
-- AI systems
-- recommendation engines
-- collaborative products
-- fullstack architecture
-- intelligent travel planning
-
----
-
-# 📄 License
-
-This project is open-source and available under the MIT License.
+MIT

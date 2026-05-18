@@ -59,7 +59,15 @@ const normalize = (value) => String(value || "").trim().toLowerCase();
 
 const scorePreference = (place, interests) => {
   if (!interests.length) return 70;
-  const searchSpace = new Set([place.type, ...place.tags].map(normalize));
+  const searchSpace = new Set([
+    place.type,
+    place.primaryCategory,
+    place.localityClusterId,
+    ...(place.tags || []),
+    ...(place.subcategories || []),
+    ...(place.vibeTags || []),
+    ...(place.tripRoles || [])
+  ].map(normalize));
   const matches = interests.filter((interest) => searchSpace.has(normalize(interest)));
   const directTypeBonus = interests.includes(normalize(place.type)) ? 15 : 0;
   return clamp(45 + matches.length / interests.length * 45 + directTypeBonus);
@@ -83,7 +91,12 @@ const scoreTimeFit = (place) => {
   return 78;
 };
 
-const scoreDistanceProxy = (place, candidates) => {
+const scoreDistanceProxy = (place, candidates, interests = []) => {
+  const wantsOuterDay = interests.some((interest) =>
+    ["day trip", "offbeat", "hidden gem", "village", "salt lake", "wildlife"].includes(normalize(interest))
+  );
+  if (place.routeZone === "outer" && !wantsOuterDay) return 35;
+
   const sameAreaCount = candidates.filter((candidate) => candidate.area === place.area).length;
   return clamp(55 + sameAreaCount * 12);
 };
@@ -93,7 +106,18 @@ const scoreDiversity = (place, candidates) => {
   return clamp(100 - Math.max(0, sameTypeCount - 2) * 8);
 };
 
-const scoreWeather = (place) => {
+const normalizeWeatherCondition = (tripInput) => {
+  if (tripInput.weather?.condition) return normalize(tripInput.weather.condition);
+  if (tripInput.weatherCondition) return normalize(tripInput.weatherCondition);
+  if (Number(tripInput.weather?.temperatureC) >= 36) return "hot";
+  return "clear";
+};
+
+const scoreWeather = (place, tripInput) => {
+  const condition = normalizeWeatherCondition(tripInput);
+  if (place.weatherSuitability?.[condition] !== undefined) {
+    return Math.round(place.weatherSuitability[condition] * 100);
+  }
   if (place.weatherSensitivity === "indoor") return 90;
   if (place.weatherSensitivity === "mixed") return 82;
   return 74;
@@ -116,13 +140,13 @@ const scoreCandidates = (candidates, tripInput) => {
         semantic: Math.round((place.semanticScore || 0) * 100),
         preference: scorePreference(place, interests),
         budget: scoreBudget(place, tripInput.budget),
-        distance: scoreDistanceProxy(place, candidates),
+        distance: scoreDistanceProxy(place, candidates, interests),
         timeFit: scoreTimeFit(place),
         diversity: scoreDiversity(place, candidates),
         quality: Math.round((place.qualityScore + place.popularityScore) / 2),
-        weather: scoreWeather(place),
+        weather: scoreWeather(place, tripInput),
         comfort: scoreComfort(place),
-        clustering: scoreDistanceProxy(place, candidates)
+        clustering: scoreDistanceProxy(place, candidates, interests)
       };
 
       const totalWeight = Object.values(weights).reduce((sum, weight) => sum + weight, 0);

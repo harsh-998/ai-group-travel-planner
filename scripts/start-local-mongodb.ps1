@@ -1,6 +1,6 @@
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $workspaceRoot = Split-Path -Parent $repoRoot
-$mongod = Join-Path $workspaceRoot "tools\mongodb\mongodb-win32-x86_64-windows-7.0.22\bin\mongod.exe"
+$bundledMongod = Join-Path $workspaceRoot "tools\mongodb\mongodb-win32-x86_64-windows-7.0.22\bin\mongod.exe"
 $dbPath = Join-Path $env:LOCALAPPDATA "WayFinder\mongo-data"
 $logPath = Join-Path $dbPath "mongod.log"
 
@@ -20,8 +20,17 @@ function Test-MongoPort {
     }
 }
 
-if (!(Test-Path $mongod)) {
-    throw "mongod.exe was not found at $mongod"
+if (Test-Path $bundledMongod) {
+    $mongod = $bundledMongod
+} else {
+    $mongodCommand = Get-Command "mongod" -ErrorAction SilentlyContinue
+    if ($mongodCommand) {
+        $mongod = $mongodCommand.Source
+    }
+}
+
+if (!$mongod) {
+    throw "mongod.exe was not found. Install MongoDB Community Server or place the bundled MongoDB tools at $bundledMongod"
 }
 
 New-Item -ItemType Directory -Force -Path $dbPath | Out-Null

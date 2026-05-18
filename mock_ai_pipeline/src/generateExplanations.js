@@ -61,8 +61,22 @@ const explainActivity = (activity) => {
       strongestFactors: strongFactors.slice(0, 4),
       semanticScore: activity.semanticScore
     },
-    sequencingReason: `${activity.title} is placed in the ${activity.slot} slot because its best time is ${activity.bestTime.join(", ")} and it fits the day route.`
+    sequencingReason: buildSequencingReason(activity)
   };
+};
+
+const buildSequencingReason = (activity) => {
+  const routePart = activity.travelFromPrevious
+    ? `about ${activity.travelFromPrevious} minutes from the previous activity`
+    : `a natural start in the ${activity.localityClusterId || activity.area} cluster`;
+  const rolePart = activity.tripRoles?.length
+    ? `it can serve as ${activity.tripRoles.slice(0, 2).map((role) => role.replace(/_/g, " ")).join(" or ")}`
+    : "it fits the requested activity mix";
+  const weatherFit = activity.weatherSuitability?.hot !== undefined
+    ? `hot-weather fit ${Math.round(activity.weatherSuitability.hot * 100)}`
+    : `weather profile ${activity.weatherSensitivity}`;
+
+  return `${activity.title} is placed in the ${activity.slot} slot because its best time is ${activity.bestTime.join(", ")}, ${routePart}, ${rolePart}, and ${weatherFit}.`;
 };
 
 const explainDay = (day) => {
@@ -98,4 +112,3 @@ const average = (values) => {
 };
 
 module.exports = generateExplanations;
-

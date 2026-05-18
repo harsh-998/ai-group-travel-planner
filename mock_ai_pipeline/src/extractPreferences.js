@@ -9,6 +9,8 @@ const extractPreferences = (input, defaults) => {
     days: Math.max(1, Math.min(7, Number(input.days || defaults.days))),
     budget,
     optimizationMode,
+    pace: normalize(input.pace || defaults.pace || "balanced"),
+    weather: normalizeWeather(input.weather || defaults.weather),
     interests: Array.isArray(input.interests)
       ? input.interests.map((interest) => normalize(interest)).filter(Boolean)
       : [],
@@ -20,5 +22,12 @@ const extractPreferences = (input, defaults) => {
   };
 };
 
-module.exports = extractPreferences;
+const normalizeWeather = (weather = {}) => {
+  const condition = normalize(weather.condition || weather.weatherCondition || "clear");
+  return {
+    condition: ["clear", "hot", "rain"].includes(condition) ? condition : "clear",
+    temperatureC: Number.isFinite(Number(weather.temperatureC)) ? Number(weather.temperatureC) : null
+  };
+};
 
+module.exports = extractPreferences;

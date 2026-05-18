@@ -5,10 +5,18 @@ const synonymMap = {
   beaches: ["beach", "coast", "coastal", "sea", "seaside", "water sports"],
   adventure: ["activities", "trek", "snow", "valley", "outdoor", "views"],
   scenic: ["view", "views", "viewpoint", "sunset", "photography", "mountain", "coastal"],
+  photography: ["photogenic", "photo", "photo stop", "viewpoint", "architecture", "scenic", "sunset"],
+  photogenic: ["photography", "photo", "viewpoint", "scenic"],
+  viewpoint: ["view", "views", "scenic", "sunset", "photography"],
+  "hidden gem": ["hidden", "underrated", "quiet", "unexpected", "offbeat", "less touristy"],
   cafes: ["cafe", "food", "brunch", "coffee", "slow travel"],
   cafe: ["cafes", "food", "brunch", "coffee", "slow travel"],
   nightlife: ["evening", "bars", "clubs", "night"],
   relaxed: ["slow", "wellness", "comfort", "comfortable", "easy"],
+  family: ["family friendly", "garden", "indoor", "low fatigue", "easy"],
+  craft: ["workshop", "textiles", "hand printing", "block printing", "pottery", "jewellery"],
+  market: ["markets", "bazaar", "shopping", "souvenirs"],
+  markets: ["market", "bazaar", "shopping", "souvenirs"],
   budget: ["cheap", "free", "low", "affordable"],
   cheap: ["budget", "free", "low", "affordable"]
 };
@@ -183,4 +191,3 @@ module.exports = {
   semanticMatch,
   tokenize
 };
-

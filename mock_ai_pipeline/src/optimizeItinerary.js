@@ -17,11 +17,28 @@ const areaPenalty = (candidate, dayItems) => {
   return sameAreaCount ? -8 : 10;
 };
 
-const timeSlotPenalty = (candidate, slotName) => {
-  return candidate.bestTime.includes(slotName) ? -15 : 28;
+const timeSlotPenalty = (candidate, slotName, tripInput) => {
+  let penalty = candidate.bestTime.includes(slotName) ? -18 : 48;
+  const weatherCondition = tripInput.weather?.condition || "clear";
+  const tags = new Set([candidate.type, ...(candidate.tags || [])].map((tag) => String(tag).toLowerCase()));
+  const tripRoles = new Set((candidate.tripRoles || []).map((role) => String(role).toLowerCase()));
+
+  if (tripRoles.has("nightlife_activity") && slotName !== "evening") penalty += 65;
+  if (slotName === "evening" && (tags.has("sunset") || tags.has("viewpoint") || tags.has("scenic"))) penalty -= 12;
+  if (slotName === "afternoon" && weatherCondition === "hot") {
+    const hotFit = candidate.weatherSuitability?.hot ?? (candidate.weatherSensitivity === "indoor" ? 0.9 : 0.45);
+    if (hotFit < 0.55) penalty += 40;
+    if (hotFit >= 0.85) penalty -= 10;
+  }
+
+  if (slotName === "morning" && weatherCondition === "hot" && candidate.weatherSensitivity === "outdoor") {
+    penalty -= 6;
+  }
+
+  return penalty;
 };
 
-const nextBestCandidate = (pool, dayItems, slotName) => {
+const nextBestCandidate = (pool, dayItems, slotName, tripInput) => {
   let best = null;
   let bestScore = -Infinity;
 
@@ -30,12 +47,17 @@ const nextBestCandidate = (pool, dayItems, slotName) => {
       ? estimateTravelMinutes(dayItems[dayItems.length - 1], candidate) * 0.25
       : 0;
 
+    const projectedFatigue = dayItems.reduce((sum, item) => sum + item.fatigueScore, 0) + candidate.fatigueScore;
+    const fatigueLimit = Number(tripInput.constraints?.maxDailyFatigue || 100);
+    const fatiguePenalty = Math.max(0, projectedFatigue - fatigueLimit) * 6;
+
     const adjustedScore =
       candidate.score -
       typePenalty(candidate, dayItems) -
       areaPenalty(candidate, dayItems) -
-      timeSlotPenalty(candidate, slotName) -
-      travelPenalty;
+      timeSlotPenalty(candidate, slotName, tripInput) -
+      travelPenalty -
+      fatiguePenalty;
 
     if (adjustedScore > bestScore) {
       best = candidate;
@@ -59,7 +81,7 @@ const optimizeItinerary = (rankedCandidates, tripInput) => {
     for (const slot of slotDefinitions) {
       if (!pool.length) break;
 
-      const candidate = nextBestCandidate(pool, dayItems, slot.name);
+      const candidate = nextBestCandidate(pool, dayItems, slot.name, tripInput);
       if (!candidate) break;
 
       const candidateIndex = pool.findIndex((item) => item.id === candidate.id);

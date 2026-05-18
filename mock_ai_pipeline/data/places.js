@@ -1,220 +1,79 @@
-const places = [
-  {
-    id: "jaipur_amber_fort",
-    name: "Amber Fort",
-    destination: "Jaipur",
-    area: "Amer",
-    type: "heritage",
-    tags: ["heritage", "fort", "architecture", "viewpoint", "photography"],
-    budgetTier: "mid",
-    estimatedCost: 500,
-    durationMinutes: 150,
-    bestTime: ["morning"],
-    coordinates: { lat: 26.9855, lng: 75.8513 },
-    popularityScore: 96,
-    qualityScore: 94,
-    weatherSensitivity: "outdoor",
-    fatigueScore: 35,
-    description: "Historic hilltop fort with courtyards, royal halls, and strong morning views."
-  },
-  {
-    id: "jaipur_city_palace",
-    name: "City Palace",
-    destination: "Jaipur",
-    area: "Old City",
-    type: "heritage",
-    tags: ["heritage", "palace", "museum", "architecture", "culture"],
-    budgetTier: "mid",
-    estimatedCost: 300,
-    durationMinutes: 100,
-    bestTime: ["morning", "afternoon"],
-    coordinates: { lat: 26.9258, lng: 75.8237 },
-    popularityScore: 90,
-    qualityScore: 88,
-    weatherSensitivity: "mixed",
-    fatigueScore: 25,
-    description: "Royal palace complex with museums, courtyards, and Jaipur's regal history."
-  },
-  {
-    id: "jaipur_hawa_mahal",
-    name: "Hawa Mahal",
-    destination: "Jaipur",
-    area: "Old City",
-    type: "heritage",
-    tags: ["heritage", "architecture", "photography", "landmark"],
-    budgetTier: "low",
-    estimatedCost: 100,
-    durationMinutes: 60,
-    bestTime: ["morning"],
-    coordinates: { lat: 26.9239, lng: 75.8267 },
-    popularityScore: 92,
-    qualityScore: 84,
-    weatherSensitivity: "outdoor",
-    fatigueScore: 15,
-    description: "Iconic pink sandstone facade best seen in morning light."
-  },
-  {
-    id: "jaipur_jantar_mantar",
-    name: "Jantar Mantar",
-    destination: "Jaipur",
-    area: "Old City",
-    type: "heritage",
-    tags: ["heritage", "science", "unesco", "architecture"],
-    budgetTier: "low",
-    estimatedCost: 100,
-    durationMinutes: 75,
-    bestTime: ["morning", "afternoon"],
-    coordinates: { lat: 26.9248, lng: 75.8246 },
-    popularityScore: 82,
-    qualityScore: 82,
-    weatherSensitivity: "outdoor",
-    fatigueScore: 18,
-    description: "UNESCO astronomical observatory with large geometric instruments."
-  },
-  {
-    id: "jaipur_lassiwala",
-    name: "Lassiwala MI Road",
-    destination: "Jaipur",
-    area: "MI Road",
-    type: "food",
-    tags: ["food", "local", "snacks", "budget", "iconic"],
-    budgetTier: "low",
-    estimatedCost: 120,
-    durationMinutes: 35,
-    bestTime: ["morning", "afternoon"],
-    coordinates: { lat: 26.9165, lng: 75.8103 },
-    popularityScore: 86,
-    qualityScore: 84,
-    weatherSensitivity: "indoor",
-    fatigueScore: 5,
-    description: "Classic Jaipur lassi stop on MI Road, quick and budget friendly."
-  },
-  {
-    id: "jaipur_laxmi_mishthan_bhandar",
-    name: "Laxmi Mishthan Bhandar",
-    destination: "Jaipur",
-    area: "Old City",
-    type: "food",
-    tags: ["food", "rajasthani", "sweets", "thali", "local"],
-    budgetTier: "mid",
-    estimatedCost: 550,
-    durationMinutes: 70,
-    bestTime: ["afternoon", "evening"],
-    coordinates: { lat: 26.9197, lng: 75.8272 },
-    popularityScore: 88,
-    qualityScore: 86,
-    weatherSensitivity: "indoor",
-    fatigueScore: 5,
-    description: "Well-known Rajasthani restaurant and sweet shop in the old city."
-  },
-  {
-    id: "jaipur_spice_court",
-    name: "Spice Court",
-    destination: "Jaipur",
-    area: "Civil Lines",
-    type: "food",
-    tags: ["food", "rajasthani", "dinner", "comfortable", "local"],
-    budgetTier: "high",
-    estimatedCost: 1200,
-    durationMinutes: 90,
-    bestTime: ["evening"],
-    coordinates: { lat: 26.9054, lng: 75.7894 },
-    popularityScore: 84,
-    qualityScore: 88,
-    weatherSensitivity: "indoor",
-    fatigueScore: 5,
-    description: "Comfortable dinner spot known for Rajasthani dishes and relaxed seating."
-  },
-  {
-    id: "jaipur_masala_chowk",
-    name: "Masala Chowk",
-    destination: "Jaipur",
-    area: "Ram Niwas Garden",
-    type: "food",
-    tags: ["food", "street food", "local", "group friendly", "budget"],
-    budgetTier: "low",
-    estimatedCost: 250,
-    durationMinutes: 75,
-    bestTime: ["evening"],
-    coordinates: { lat: 26.9126, lng: 75.8205 },
-    popularityScore: 82,
-    qualityScore: 80,
-    weatherSensitivity: "outdoor",
-    fatigueScore: 8,
-    description: "Open food court with many local Jaipur street-food vendors in one place."
-  },
-  {
-    id: "jaipur_bapu_bazaar",
-    name: "Bapu Bazaar",
-    destination: "Jaipur",
-    area: "Old City",
-    type: "shopping",
-    tags: ["shopping", "local", "market", "textiles", "souvenirs"],
-    budgetTier: "low",
-    estimatedCost: 300,
-    durationMinutes: 90,
-    bestTime: ["afternoon", "evening"],
-    coordinates: { lat: 26.9165, lng: 75.8266 },
-    popularityScore: 78,
-    qualityScore: 76,
-    weatherSensitivity: "outdoor",
-    fatigueScore: 25,
-    description: "Bustling local market for textiles, juttis, souvenirs, and bargaining."
-  },
-  {
-    id: "jaipur_nahargarh_fort",
-    name: "Nahargarh Fort",
-    destination: "Jaipur",
-    area: "Aravalli Hills",
-    type: "viewpoint",
-    tags: ["heritage", "viewpoint", "sunset", "fort", "photography"],
-    budgetTier: "low",
-    estimatedCost: 200,
-    durationMinutes: 120,
-    bestTime: ["evening"],
-    coordinates: { lat: 26.9373, lng: 75.8154 },
-    popularityScore: 86,
-    qualityScore: 88,
-    weatherSensitivity: "outdoor",
-    fatigueScore: 30,
-    description: "Hill fort with panoramic views of Jaipur, especially strong near sunset."
-  },
-  {
-    id: "jaipur_albert_hall",
-    name: "Albert Hall Museum",
-    destination: "Jaipur",
-    area: "Ram Niwas Garden",
-    type: "museum",
-    tags: ["heritage", "museum", "architecture", "culture", "indoor"],
-    budgetTier: "low",
-    estimatedCost: 100,
-    durationMinutes: 90,
-    bestTime: ["afternoon"],
-    coordinates: { lat: 26.9117, lng: 75.8195 },
-    popularityScore: 80,
-    qualityScore: 82,
-    weatherSensitivity: "indoor",
-    fatigueScore: 18,
-    description: "Indo-Saracenic museum with artifacts, art, and a good indoor break."
-  },
-  {
-    id: "jaipur_panna_meena_stepwell",
-    name: "Panna Meena ka Kund",
-    destination: "Jaipur",
-    area: "Amer",
-    type: "heritage",
-    tags: ["heritage", "stepwell", "photography", "architecture", "hidden gem"],
-    budgetTier: "free",
-    estimatedCost: 0,
-    durationMinutes: 40,
-    bestTime: ["morning", "afternoon"],
-    coordinates: { lat: 26.9867, lng: 75.8501 },
-    popularityScore: 74,
-    qualityScore: 78,
-    weatherSensitivity: "outdoor",
-    fatigueScore: 10,
-    description: "Geometric stepwell near Amer, useful as a compact heritage add-on."
-  },
+const jaipurPlaceIntelligence = require("./jaipurPlaceIntelligence");
+
+const toLegacyPlace = (place) => {
+  const tags = unique([
+    place.primaryCategory,
+    ...place.subcategories,
+    ...place.subcategories.map((tag) => tag.replace(/_/g, " ")),
+    ...place.semanticTags,
+    ...place.vibeTags,
+    ...place.tripRoles,
+    ...place.tripRoles.map((tag) => tag.replace(/_/g, " ")),
+    ...place.idealVisitWindows,
+    ...place.idealVisitWindows.map((tag) => tag.replace(/_/g, " "))
+  ]);
+
+  return {
+    id: place.placeId,
+    name: place.canonicalName,
+    destination: place.destination,
+    area: jaipurPlaceIntelligence.localityClusters[place.localityClusterId]?.label || place.localityClusterId,
+    localityClusterId: place.localityClusterId,
+    routeZone: place.routing.routeZone,
+    type: place.primaryCategory,
+    primaryCategory: place.primaryCategory,
+    subcategories: place.subcategories,
+    tags,
+    vibeTags: place.vibeTags,
+    tripRoles: place.tripRoles,
+    budgetTier: place.budgetTier,
+    estimatedCost: Math.round((place.estimatedCost.min + place.estimatedCost.max) / 2),
+    estimatedCostRange: place.estimatedCost,
+    durationMinutes: place.typicalDurationMinutes,
+    bestTime: toLegacyBestTime(place.idealVisitWindows),
+    idealVisitWindows: place.idealVisitWindows,
+    coordinates: place.coordinates,
+    popularityScore: Math.round(place.qualitySignals.popularityScore * 100),
+    qualityScore: Math.round(average([
+      place.qualitySignals.popularityScore,
+      place.qualitySignals.photographyValue,
+      place.qualitySignals.familyFit,
+      place.qualitySignals.groupFit,
+      place.confidence.metadataCompleteness
+    ]) * 100),
+    weatherSensitivity: place.indoorOutdoor,
+    weatherSuitability: place.weatherSuitability,
+    fatigueScore: place.fatigueScore,
+    nearbyPlaceIds: place.routing.nearbyPlaceIds,
+    backtrackingPenaltyGroup: place.routing.backtrackingPenaltyGroup,
+    placeIntelligence: place,
+    description: buildLegacyDescription(place)
+  };
+};
+
+const toLegacyBestTime = (windows) => {
+  const mapped = windows.map((window) => {
+    if (window === "early_morning" || window === "morning") return "morning";
+    if (window === "afternoon") return "afternoon";
+    return "evening";
+  });
+  return unique(mapped);
+};
+
+const buildLegacyDescription = (place) => {
+  const [summary] = place.embedding.embeddingText.split(" Subcategories:");
+  return summary;
+};
+
+const unique = (values) => [...new Set(values.filter(Boolean))];
+
+const average = (values) => {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+};
+
+const legacyJaipurPlaces = jaipurPlaceIntelligence.map(toLegacyPlace);
+
+const otherPlaces = [
   {
     id: "manali_hadimba_temple",
     name: "Hadimba Temple",
@@ -280,7 +139,7 @@ const places = [
     estimatedCost: 1500,
     durationMinutes: 240,
     bestTime: ["morning", "afternoon"],
-    coordinates: { lat: 32.3160, lng: 77.1570 },
+    coordinates: { lat: 32.316, lng: 77.157 },
     popularityScore: 88,
     qualityScore: 82,
     weatherSensitivity: "outdoor",
@@ -316,7 +175,7 @@ const places = [
     estimatedCost: 0,
     durationMinutes: 75,
     bestTime: ["morning", "afternoon"],
-    coordinates: { lat: 32.2631, lng: 77.1880 },
+    coordinates: { lat: 32.2631, lng: 77.188 },
     popularityScore: 72,
     qualityScore: 74,
     weatherSensitivity: "mixed",
@@ -388,7 +247,7 @@ const places = [
     estimatedCost: 1600,
     durationMinutes: 100,
     bestTime: ["evening"],
-    coordinates: { lat: 15.1680, lng: 73.9480 },
+    coordinates: { lat: 15.168, lng: 73.948 },
     popularityScore: 82,
     qualityScore: 86,
     weatherSensitivity: "mixed",
@@ -433,5 +292,6 @@ const places = [
   }
 ];
 
-module.exports = places;
+const places = [...legacyJaipurPlaces, ...otherPlaces];
 
+module.exports = places;
