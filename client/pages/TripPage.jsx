@@ -223,7 +223,7 @@ const TripPage = () => {
                                 onClick={() => navigate(`/trip/${id}/graph`)}
                                 className="text-xs text-teal-700 border border-dashed px-2 py-3 rounded cursor-pointer"
                             >
-                                Graph View
+                                Planning Canvas
                             </button>
                         </div>
 
