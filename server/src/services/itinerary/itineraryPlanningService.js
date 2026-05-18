@@ -19,6 +19,8 @@ const buildTripInputFromGroup = (group, overrideInput = {}) => {
     budget: overrideInput.budget || "balanced",
     optimizationMode: overrideInput.optimizationMode || overrideInput.budget || "balanced",
     interests: overrideInput.interests || ["heritage", "food"],
+    adaptiveProfile: overrideInput.adaptiveProfile || overrideInput.adaptiveContext?.effectiveProfile || null,
+    adaptiveContext: overrideInput.adaptiveContext || null,
     ...overrideInput
   };
 };
@@ -32,4 +34,3 @@ module.exports = {
   buildTripInputFromGroup,
   generatePlannedItinerary
 };
-

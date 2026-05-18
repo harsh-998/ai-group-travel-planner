@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiLoader } from "react-icons/fi";
 import { getGroup } from "../src/api/groupApi";
-import { generateItinerary, partialRegenerate } from "../src/api/planningApi";
+import { generateItinerary, partialRegenerate, recordPlanningInteraction } from "../src/api/planningApi";
 import TravelWorkspaceCanvas from "../src/workspace/TravelWorkspaceCanvas";
 import { useTravelWorkspace } from "../src/workspace/useTravelWorkspace";
 
@@ -207,6 +207,7 @@ const GraphItineraryPage = () => {
         operation: {
           type: "replaceActivity",
           activityId: node.data.placeId,
+          activityContext: serializeNodeForLearning(node),
           replacementInterests,
           preserveType: node.data.type === "food",
           reason: `Canvas quick-replace requested for ${node.data.title}`
@@ -232,6 +233,23 @@ const GraphItineraryPage = () => {
       setGenerating(false);
     }
   }, [applyItinerary, generating, group, id]);
+
+  const handleTrackInteraction = useCallback(async (event) => {
+    try {
+      const result = await recordPlanningInteraction({
+        groupId: id,
+        event
+      });
+      setGroup((current) => current
+        ? {
+          ...current,
+          adaptivePlanning: result.adaptivePlanning
+        }
+        : current);
+    } catch (err) {
+      console.warn("Adaptive preference signal was not saved:", err.response?.data?.message || err.message);
+    }
+  }, [id]);
 
   if (loading || !workspace) {
     return (
@@ -260,10 +278,24 @@ const GraphItineraryPage = () => {
       onGenerate={handleGenerate}
       onRegenerateDay={handleRegenerateDay}
       onReplaceNode={handleReplaceNode}
+      onTrackInteraction={handleTrackInteraction}
       onNavigateClassic={() => navigate(`/trip/${id}/itinerary`)}
       onNavigateTrip={() => navigate(`/trip/${id}`)}
     />
   );
 };
+
+const serializeNodeForLearning = (node) => ({
+  placeId: node.data?.placeId || node.id,
+  type: node.data?.type || node.type,
+  tags: node.data?.tags || [],
+  vibeTags: node.data?.vibeTags || [],
+  tripRoles: node.data?.tripRoles || [],
+  localityClusterId: node.data?.localityClusterId || node.data?.clusterId,
+  routeZone: node.data?.routeZone,
+  budgetTier: node.data?.budgetTier,
+  fatigueScore: node.data?.fatigueScore,
+  durationMinutes: node.data?.durationMinutes
+});
 
 export default GraphItineraryPage;

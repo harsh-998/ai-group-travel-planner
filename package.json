@@ -10,6 +10,7 @@
     "dev:client": "npm --prefix client run dev",
     "build": "npm --prefix client run build",
     "audit:jaipur": "node mock_ai_pipeline/runJaipurSeedAudit.js",
+    "audit:adaptive": "node mock_ai_pipeline/runAdaptivePreferenceDemo.js",
     "evaluate": "node mock_ai_pipeline/runEvaluation.js"
   }
 }

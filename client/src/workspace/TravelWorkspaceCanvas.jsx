@@ -72,6 +72,7 @@ const TravelWorkspaceCanvas = ({
   onGenerate,
   onRegenerateDay,
   onReplaceNode,
+  onTrackInteraction,
   onNavigateClassic,
   onNavigateTrip
 }) => {
@@ -144,6 +145,9 @@ const TravelWorkspaceCanvas = ({
     dispatch({ type: "SELECT_NODE", nodeId: node.id, additive: event.shiftKey || event.metaKey });
     setDrag({
       nodeId: node.id,
+      startDay: node.day,
+      startPosition: node.position,
+      place: serializeNodeForLearning(node),
       offsetX: point.x - node.position.x,
       offsetY: point.y - node.position.y
     });
@@ -174,6 +178,31 @@ const TravelWorkspaceCanvas = ({
   };
 
   const handleCanvasPointerUp = () => {
+    if (drag) {
+      const movedNode = workspace.nodes[drag.nodeId];
+      const movedEnough = movedNode && (
+        movedNode.day !== drag.startDay ||
+        Math.abs(movedNode.position.x - drag.startPosition.x) > 24 ||
+        Math.abs(movedNode.position.y - drag.startPosition.y) > 24
+      );
+
+      if (movedEnough) {
+        onTrackInteraction?.({
+          type: movedNode.day !== drag.startDay ? "activity_moved_day" : "activity_moved",
+          source: "planning_canvas",
+          activityId: movedNode.data?.placeId || movedNode.id,
+          day: movedNode.day,
+          place: drag.place,
+          metadata: {
+            fromDay: drag.startDay,
+            toDay: movedNode.day,
+            fromPosition: drag.startPosition,
+            toPosition: movedNode.position,
+            sameClusterFlow: true
+          }
+        });
+      }
+    }
     setDrag(null);
     setPan(null);
   };
@@ -202,6 +231,11 @@ const TravelWorkspaceCanvas = ({
       canvasRef.current.getBoundingClientRect().top + canvasRef.current.clientHeight / 2
     );
     dispatch({ type: "ADD_STICKY", position: center, text: "Vote, concern, or idea" });
+    onTrackInteraction?.({
+      type: "planning_note_added",
+      source: "planning_canvas",
+      metadata: { x: Math.round(center.x), y: Math.round(center.y) }
+    });
   };
 
   const moveToNextDay = (node) => {
@@ -212,6 +246,62 @@ const TravelWorkspaceCanvas = ({
       type: "MOVE_NODE",
       nodeId: node.id,
       position: { x: node.position.x + 40, y: nextLane.y + 58 }
+    });
+    onTrackInteraction?.({
+      type: "activity_moved_day",
+      source: "planning_canvas",
+      activityId: node.data?.placeId || node.id,
+      day: nextLane.day,
+      place: serializeNodeForLearning(node),
+      metadata: {
+        fromDay: node.day,
+        toDay: nextLane.day,
+        trigger: "quick_action"
+      }
+    });
+  };
+
+  const runAiAction = (actionId) => {
+    dispatch({ type: "APPLY_AI_ACTION", actionId });
+    onTrackInteraction?.({
+      type: actionId === "rebalance_fatigue" || actionId === "make_relaxed" ? "recovery_block_added" : "ai_suggestion_accepted",
+      source: "planning_canvas",
+      day: selectedNode?.day,
+      place: selectedNode ? serializeNodeForLearning(selectedNode) : undefined,
+      metadata: { actionId }
+    });
+  };
+
+  const duplicateNode = (node) => {
+    dispatch({ type: "DUPLICATE_NODE", nodeId: node.id });
+    onTrackInteraction?.({
+      type: "activity_duplicated",
+      source: "planning_canvas",
+      activityId: node.data?.placeId || node.id,
+      day: node.day,
+      place: serializeNodeForLearning(node)
+    });
+  };
+
+  const togglePin = (node) => {
+    dispatch({ type: "TOGGLE_PIN", nodeId: node.id });
+    onTrackInteraction?.({
+      type: node.pinned ? "activity_unpinned" : "activity_pinned",
+      source: "planning_canvas",
+      activityId: node.data?.placeId || node.id,
+      day: node.day,
+      place: serializeNodeForLearning(node)
+    });
+  };
+
+  const addNodeNote = (node) => {
+    dispatch({ type: "ADD_NOTE", nodeId: node.id, text: "Needs group review" });
+    onTrackInteraction?.({
+      type: "planning_note_added",
+      source: "planning_canvas",
+      activityId: node.data?.placeId || node.id,
+      day: node.day,
+      place: serializeNodeForLearning(node)
     });
   };
 
@@ -290,12 +380,12 @@ const TravelWorkspaceCanvas = ({
                   darkMode={darkMode}
                   onPointerDown={(event) => handleNodePointerDown(event, node)}
                   onFocus={() => dispatch({ type: "FOCUS_NODE", nodeId: node.id })}
-                  onDuplicate={() => dispatch({ type: "DUPLICATE_NODE", nodeId: node.id })}
-                  onPin={() => dispatch({ type: "TOGGLE_PIN", nodeId: node.id })}
-                  onNote={() => dispatch({ type: "ADD_NOTE", nodeId: node.id, text: "Needs group review" })}
+                  onDuplicate={() => duplicateNode(node)}
+                  onPin={() => togglePin(node)}
+                  onNote={() => addNodeNote(node)}
                   onMoveDay={() => moveToNextDay(node)}
                   onExpand={() => dispatch({ type: "EXPAND_DETAILS", nodeId: node.id })}
-                  onOptimize={() => dispatch({ type: "APPLY_AI_ACTION", actionId: "add_hidden_gems" })}
+                  onOptimize={() => runAiAction("add_hidden_gems")}
                   onReplace={() => onReplaceNode(node)}
                 />
               ))}
@@ -333,8 +423,9 @@ const TravelWorkspaceCanvas = ({
           generating={generating}
           error={error}
           darkMode={darkMode}
+          adaptiveSummary={group?.adaptivePlanning?.summary}
           onGenerate={submitPrompt}
-          onAction={(actionId) => dispatch({ type: "APPLY_AI_ACTION", actionId })}
+          onAction={runAiAction}
         />
       </div>
     </div>
@@ -843,6 +934,7 @@ const CopilotPanel = ({
   generating,
   error,
   darkMode,
+  adaptiveSummary,
   onGenerate,
   onAction
 }) => (
@@ -863,6 +955,8 @@ const CopilotPanel = ({
         Watching route shape, locality jumps, fatigue load, weather exposure, and missing anchors as you move nodes.
       </p>
     </div>
+
+    <AdaptiveMemoryCard adaptiveSummary={adaptiveSummary} darkMode={darkMode} />
 
     {error && (
       <div className="mb-4 rounded-2xl border border-rose-300/50 bg-rose-400/10 p-3 text-sm text-rose-600">
@@ -988,6 +1082,42 @@ const CopilotPanel = ({
   </aside>
 );
 
+const AdaptiveMemoryCard = ({ adaptiveSummary, darkMode }) => {
+  const signals = adaptiveSummary?.strongestSignals || [];
+
+  return (
+    <div className={`mb-4 rounded-3xl border p-4 ${darkMode ? "border-white/10 bg-white/5" : "border-slate-200 bg-white"}`}>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className={`text-[10px] font-semibold uppercase tracking-[0.2em] ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+            Preference memory
+          </p>
+          <h3 className="mt-1 text-sm font-semibold">
+            {adaptiveSummary ? "Learning from this trip" : "Ready to learn"}
+          </h3>
+        </div>
+        <span className="rounded-full bg-teal-500/12 px-3 py-1 text-[11px] font-semibold text-teal-500">
+          {Math.round((adaptiveSummary?.profileConfidence || 0) * 100)}%
+        </span>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {signals.length ? signals.slice(0, 3).map((signal) => (
+          <span
+            key={signal.dimension}
+            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${signal.direction === "positive" ? "bg-emerald-500/12 text-emerald-600" : "bg-rose-500/12 text-rose-600"}`}
+          >
+            {signal.dimension.replace(/[A-Z]/g, (match) => ` ${match.toLowerCase()}`)} {signal.value}
+          </span>
+        )) : (
+          <span className={`text-xs ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+            Pin, move, replace, or accept AI actions to start shaping scoring.
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const SelectedNodePanel = ({ selectedNode, darkMode }) => {
   if (!selectedNode) {
     return (
@@ -1067,6 +1197,19 @@ const normalizeMapPoints = (nodes) => {
       y: 126 - ((rawY - minY) / spreadY) * 102
     }));
 };
+
+const serializeNodeForLearning = (node) => ({
+  placeId: node.data?.placeId || node.id,
+  type: node.data?.type || node.type,
+  tags: node.data?.tags || [],
+  vibeTags: node.data?.vibeTags || [],
+  tripRoles: node.data?.tripRoles || [],
+  localityClusterId: node.data?.localityClusterId || node.data?.clusterId,
+  routeZone: node.data?.routeZone,
+  budgetTier: node.data?.budgetTier,
+  fatigueScore: node.data?.fatigueScore,
+  durationMinutes: node.data?.durationMinutes
+});
 
 function FiSparkleFallback() {
   return <FiSliders />;

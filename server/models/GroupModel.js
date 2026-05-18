@@ -21,6 +21,7 @@ const activitySchema = new mongoose.Schema({
     semanticScore: Number,
     source: String,
     selectionReason: String,
+    adaptiveFitReason: String,
     retrievalReason: String,
     explanation: Mixed,
     scoreBreakdown: Mixed,
@@ -132,6 +133,11 @@ const groupSchema = new mongoose.Schema({
     itinerary: [itineraryDaySchema],
 
     aiPlanning: {
+        type: Mixed,
+        default: {}
+    },
+
+    adaptivePlanning: {
         type: Mixed,
         default: {}
     },

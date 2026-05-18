@@ -42,8 +42,9 @@ const runPipeline = (input = defaultInput) => {
       retrievalMeta,
       stageOrder: [
         "preference_extraction",
+        "adaptive_preference_context",
         "semantic_retrieval",
-        "candidate_ranking",
+        "adaptive_candidate_ranking",
         "optimization",
         "validation",
         "explanation_generation",
@@ -57,10 +58,12 @@ const runPipeline = (input = defaultInput) => {
         area: candidate.area,
         score: candidate.score,
         semanticScore: candidate.semanticScore,
+        adaptivePreference: candidate.scoreBreakdown?.adaptivePreference,
         matchedTags: candidate.matchedTags,
         fuzzyMatchedTags: candidate.fuzzyMatchedTags,
         synonymMatchedTags: candidate.synonymMatchedTags,
-        selectionReason: candidate.selectionReason
+        selectionReason: candidate.selectionReason,
+        adaptiveFitReason: candidate.adaptiveFitReason
       }))
     },
     itinerary: evaluatedItinerary

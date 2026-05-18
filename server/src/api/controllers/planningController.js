@@ -7,6 +7,10 @@ const {
 const { regeneratePartialItinerary } = require("../../services/regeneration/partialRegenerationService");
 const { validatePlanningItinerary } = require("../../services/validation/itineraryValidationService");
 const { timeOperation } = require("../../services/observability/logger");
+const {
+  getAdaptivePlanningContext,
+  recordBehaviorSignal
+} = require("../../services/adaptive/adaptiveMemoryService");
 
 const generateItinerary = async (req, res) => {
   const { groupId, input = {} } = req.body;
@@ -14,8 +18,17 @@ const generateItinerary = async (req, res) => {
   const group = await Group.findById(groupId);
   if (!group) return res.status(404).json({ message: "Group not found", traceId: req.traceId });
 
+  const adaptiveContext = await getAdaptivePlanningContext({
+    group,
+    userId: req.user?._id
+  });
+
   const planningResult = await timeOperation("planning.generate", req.traceId, async () =>
-    generatePlannedItinerary(group, input)
+    generatePlannedItinerary(group, {
+      ...input,
+      adaptiveContext,
+      adaptiveProfile: adaptiveContext.effectiveProfile
+    })
   );
 
   await saveGeneratedItinerary({
@@ -37,6 +50,10 @@ const partialRegenerate = async (req, res) => {
 
   const group = await Group.findById(groupId);
   if (!group) return res.status(404).json({ message: "Group not found", traceId: req.traceId });
+  const adaptiveContext = await getAdaptivePlanningContext({
+    group,
+    userId: req.user?._id
+  });
 
   const activeItinerary = group.aiPlanning?.activeItinerary || {
     itineraryId: `group_${group._id}`,
@@ -54,7 +71,14 @@ const partialRegenerate = async (req, res) => {
 
   const regenerationResult = await timeOperation("planning.partial_regenerate", req.traceId, async () =>
     regeneratePartialItinerary({
-      itinerary: activeItinerary,
+      itinerary: {
+        ...activeItinerary,
+        input: {
+          ...(activeItinerary.input || {}),
+          adaptiveContext,
+          adaptiveProfile: adaptiveContext.effectiveProfile
+        }
+      },
       operation
     })
   );
@@ -68,6 +92,23 @@ const partialRegenerate = async (req, res) => {
 
   res.json({
     ...regenerationResult,
+    traceId: req.traceId
+  });
+};
+
+const recordInteraction = async (req, res) => {
+  const { groupId } = req.params;
+  const { event } = req.body;
+
+  const result = await recordBehaviorSignal({
+    groupId,
+    userId: req.user?._id,
+    event,
+    traceId: req.traceId
+  });
+
+  res.json({
+    ...result,
     traceId: req.traceId
   });
 };
@@ -119,9 +160,9 @@ const getHistory = async (req, res) => {
 module.exports = {
   generateItinerary,
   partialRegenerate,
+  recordInteraction,
   validateItinerary,
   getExplanations,
   getStability,
   getHistory
 };
-

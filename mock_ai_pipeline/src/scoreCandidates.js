@@ -1,4 +1,9 @@
 const { budgetRank, budgetTarget, clamp } = require("./utils");
+const {
+  buildAdaptiveWeights,
+  explainAdaptiveFit,
+  scoreAdaptivePreference
+} = require("./adaptive/adaptiveScoring");
 
 const weightsByMode = {
   balanced: {
@@ -131,7 +136,7 @@ const scoreComfort = (place) => {
 
 const scoreCandidates = (candidates, tripInput) => {
   const mode = normalize(tripInput.optimizationMode || tripInput.budget || "balanced").replace("-", "_");
-  const weights = weightsByMode[mode] || weightsByMode.balanced;
+  const weights = buildAdaptiveWeights(weightsByMode[mode] || weightsByMode.balanced, tripInput);
   const interests = (tripInput.interests || []).map(normalize);
 
   return candidates
@@ -146,7 +151,8 @@ const scoreCandidates = (candidates, tripInput) => {
         quality: Math.round((place.qualityScore + place.popularityScore) / 2),
         weather: scoreWeather(place, tripInput),
         comfort: scoreComfort(place),
-        clustering: scoreDistanceProxy(place, candidates, interests)
+        clustering: scoreDistanceProxy(place, candidates, interests),
+        adaptivePreference: scoreAdaptivePreference(place, tripInput)
       };
 
       const totalWeight = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
@@ -160,22 +166,25 @@ const scoreCandidates = (candidates, tripInput) => {
         ...place,
         score: Number(score.toFixed(2)),
         scoreBreakdown: breakdown,
-        selectionReason: buildSelectionReason(place, breakdown)
+        adaptiveFitReason: explainAdaptiveFit(place, tripInput),
+        selectionReason: buildSelectionReason(place, breakdown, tripInput)
       };
     })
     .sort((a, b) => b.score - a.score);
 };
 
-const buildSelectionReason = (place, breakdown) => {
+const buildSelectionReason = (place, breakdown, tripInput) => {
   const strengths = Object.entries(breakdown)
     .filter(([, score]) => score >= 85)
     .map(([name]) => name);
+  const adaptiveReason = explainAdaptiveFit(place, tripInput);
 
   if (!strengths.length) {
-    return `${place.name} is a usable ${place.type} option with balanced fit.`;
+    return adaptiveReason || `${place.name} is a usable ${place.type} option with balanced fit.`;
   }
 
-  return `${place.name} ranks strongly for ${strengths.slice(0, 3).join(", ")}.`;
+  const baseReason = `${place.name} ranks strongly for ${strengths.slice(0, 3).join(", ")}.`;
+  return adaptiveReason ? `${baseReason} ${adaptiveReason}` : baseReason;
 };
 
 module.exports = scoreCandidates;

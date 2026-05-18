@@ -55,8 +55,26 @@ const validatePartialRegeneration = (req) => {
   };
 };
 
-module.exports = {
-  validateGenerateItinerary,
-  validatePartialRegeneration
+const validateBehaviorSignal = (req) => {
+  const errors = [];
+  const event = req.body.event;
+
+  if (!event || typeof event !== "object") {
+    errors.push("event object is required.");
+  } else if (!event.type && !event.eventType) {
+    errors.push("event.type is required.");
+  }
+
+  if (!req.params.groupId) errors.push("groupId is required.");
+
+  return {
+    valid: errors.length === 0,
+    errors
+  };
 };
 
+module.exports = {
+  validateGenerateItinerary,
+  validatePartialRegeneration,
+  validateBehaviorSignal
+};

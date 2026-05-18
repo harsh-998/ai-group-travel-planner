@@ -39,6 +39,7 @@ const generateItineraryJson = ({ tripInput, optimizedDays, retrievalMeta }) => {
       retrievalReason: item.retrievalReason,
       semanticSignals: item.semanticSignals,
       selectionReason: item.selectionReason,
+      adaptiveFitReason: item.adaptiveFitReason,
       scoreBreakdown: item.scoreBreakdown
     }))
   }));

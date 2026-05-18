@@ -243,6 +243,7 @@ const candidateToActivity = (candidate, previousActivity) => ({
   retrievalReason: candidate.retrievalReason,
   semanticSignals: candidate.semanticSignals,
   selectionReason: candidate.selectionReason,
+  adaptiveFitReason: candidate.adaptiveFitReason,
   scoreBreakdown: candidate.scoreBreakdown,
   locked: false,
   weatherSensitivity: candidate.weatherSensitivity,

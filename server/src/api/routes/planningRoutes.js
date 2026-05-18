@@ -6,7 +6,8 @@ const asyncHandler = require("../middleware/asyncHandler");
 const validateRequest = require("../middleware/validateRequest");
 const {
   validateGenerateItinerary,
-  validatePartialRegeneration
+  validatePartialRegeneration,
+  validateBehaviorSignal
 } = require("../validators/planningValidators");
 const planningController = require("../controllers/planningController");
 
@@ -22,6 +23,13 @@ router.post(
   protect,
   validateRequest(validatePartialRegeneration),
   asyncHandler(planningController.partialRegenerate)
+);
+
+router.post(
+  "/itineraries/:groupId/interactions",
+  protect,
+  validateRequest(validateBehaviorSignal),
+  asyncHandler(planningController.recordInteraction)
 );
 
 router.post(
@@ -49,4 +57,3 @@ router.get(
 );
 
 module.exports = router;
-

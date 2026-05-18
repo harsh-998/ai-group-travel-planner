@@ -15,6 +15,13 @@ export const partialRegenerate = async ({ groupId, operation }) => {
   return response.data;
 };
 
+export const recordPlanningInteraction = async ({ groupId, event }) => {
+  const response = await apiClient.post(`/api/planning/itineraries/${groupId}/interactions`, {
+    event
+  });
+  return response.data;
+};
+
 export const validateItinerary = async (groupId) => {
   const response = await apiClient.post(`/api/planning/itineraries/${groupId}/validate`);
   return response.data;
@@ -29,4 +36,3 @@ export const getStability = async (groupId) => {
   const response = await apiClient.get(`/api/planning/itineraries/${groupId}/stability`);
   return response.data;
 };
-

@@ -11,6 +11,8 @@ const extractPreferences = (input, defaults) => {
     optimizationMode,
     pace: normalize(input.pace || defaults.pace || "balanced"),
     weather: normalizeWeather(input.weather || defaults.weather),
+    adaptiveProfile: input.adaptiveProfile || input.preferenceProfile || input.adaptiveContext?.effectiveProfile || defaults.adaptiveProfile || null,
+    adaptiveContext: input.adaptiveContext || defaults.adaptiveContext || null,
     interests: Array.isArray(input.interests)
       ? input.interests.map((interest) => normalize(interest)).filter(Boolean)
       : [],

@@ -1,4 +1,7 @@
 const Group = require("../../../models/GroupModel");
+const {
+  recordPlanningOperationSignal
+} = require("../adaptive/adaptiveMemoryService");
 
 const saveGeneratedItinerary = async ({ groupId, planningResult, traceId }) => {
   const group = await Group.findById(groupId);
@@ -17,6 +20,7 @@ const saveGeneratedItinerary = async ({ groupId, planningResult, traceId }) => {
     validation: itinerary.validation,
     explanations: itinerary.explanations,
     evaluationMetrics: itinerary.evaluationMetrics,
+    adaptiveContext: planningResult.input?.adaptiveContext || itinerary.input?.adaptiveContext || null,
     traceId,
     updatedAt: new Date()
   };
@@ -70,6 +74,19 @@ const savePartialRegeneration = async ({ groupId, regenerationResult, traceId, u
   });
 
   await group.save();
+
+  try {
+    await recordPlanningOperationSignal({
+      groupId,
+      userId,
+      operation: regenerationResult.operation,
+      regenerationResult,
+      traceId
+    });
+  } catch (error) {
+    console.warn("Adaptive planning signal skipped:", error.message);
+  }
+
   return group;
 };
 
@@ -77,4 +94,3 @@ module.exports = {
   saveGeneratedItinerary,
   savePartialRegeneration
 };
-
