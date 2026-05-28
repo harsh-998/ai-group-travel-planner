@@ -5,6 +5,7 @@ import { FiCheck } from "react-icons/fi";
 import { MdOutlineTravelExplore } from "react-icons/md";
 import { getMe } from "../src/api/authApi";
 import { getGroup } from "../src/api/groupApi";
+import { getTripImage } from "../src/utils/destinationImages";
 
 const TripPage = () => {
     const { id } = useParams();
@@ -121,6 +122,7 @@ const TripPage = () => {
 
     const finalTrip = trip || {};
     const previewDays = finalTrip.aiPlanning?.activeItinerary?.days || finalTrip.itinerary || [];
+    const heroImage = getTripImage(finalTrip) || finalTrip.aiPlanning?.activeItinerary?.destinationImage;
 
     return (
         <div className="bg-[#f5f7f8] min-h-screen cursor-pointer">
@@ -173,10 +175,11 @@ const TripPage = () => {
 
                     <div className="w-[40%] relative">
                         <img
-                            src={`https://picsum.photos/seed/${finalTrip.destination}-${id}/900/600`}
+                            src={heroImage}
+                            alt={finalTrip.destination}
                             className="rounded-2xl h-[280px] w-full object-cover shadow-md"
                             onError={(e) => {
-                                e.target.src = "https://picsum.photos/900/600";
+                                e.currentTarget.style.display = "none";
                             }}
                         />
 

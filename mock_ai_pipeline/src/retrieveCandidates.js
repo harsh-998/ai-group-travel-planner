@@ -20,9 +20,13 @@ const retrieveCandidates = (tripInput) => {
     ...(tripInput.interests || [])
   ]);
 
-  const destinationMatches = places.filter(
-    (place) => normalize(place.destination) === destination
-  );
+  const destinationMatches = places.filter((place) => {
+    const destinationAliases = [
+      place.destination,
+      ...(place.destinationAliases || [])
+    ].map(normalize);
+    return destinationAliases.includes(destination);
+  });
 
   const semanticThreshold = 0.16;
   const semanticallyScored = destinationMatches

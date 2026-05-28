@@ -8,6 +8,7 @@ import Navbar from "../components/Navbar.jsx";
 import GroupModal from "../components/GroupModal.jsx";
 import { getMe } from "../src/api/authApi";
 import { getJoinCode } from "../src/api/groupApi";
+import { getTripImage } from "../src/utils/destinationImages";
 
 function TripsDashboard({ groups, fetchGroups }) {
 
@@ -66,7 +67,7 @@ function TripsDashboard({ groups, fetchGroups }) {
         type: group.type,
         status: group.startDate ? "ongoing" : "planning",
         travelers: group.members.length,
-        image: `https://picsum.photos/seed/${group.destination}-${group._id}/800/600`,
+        image: getTripImage(group),
         createdBy: group.createdBy
     }));
 
@@ -120,7 +121,7 @@ function TripsDashboard({ groups, fetchGroups }) {
                                         alt="trip"
                                         className="w-full h-full object-cover"
                                         onError={(e) => {
-                                            e.target.src = "https://picsum.photos/800/600";
+                                            e.currentTarget.style.display = "none";
                                         }}
                                     />
 

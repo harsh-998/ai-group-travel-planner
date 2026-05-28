@@ -6,6 +6,9 @@ const slotDefinitions = [
   { name: "evening", start: "18:00" }
 ];
 
+const DAY_END_MINUTES = timeToMinutes("22:30");
+const DEFAULT_MAX_WITHIN_DAY_TRAVEL_MINUTES = 180;
+
 const typePenalty = (candidate, dayItems) => {
   const sameTypeCount = dayItems.filter((item) => item.type === candidate.type).length;
   return sameTypeCount * 8;
@@ -38,14 +41,48 @@ const timeSlotPenalty = (candidate, slotName, tripInput) => {
   return penalty;
 };
 
-const nextBestCandidate = (pool, dayItems, slotName, tripInput) => {
+const getMaxWithinDayTravel = (tripInput) =>
+  Number(tripInput.constraints?.maxWithinDayTravelMinutes || DEFAULT_MAX_WITHIN_DAY_TRAVEL_MINUTES);
+
+const countFeasibleCompanions = (candidate, pool, maxTravelMinutes) =>
+  pool.filter((item) => item.id !== candidate.id && estimateTravelMinutes(candidate, item) <= maxTravelMinutes).length;
+
+const getCandidateTiming = (candidate, dayItems, slotName, previousEnd, maxWithinDayTravelMinutes) => {
+  const travelFromPrevious = dayItems.length
+    ? estimateTravelMinutes(dayItems[dayItems.length - 1], candidate)
+    : 0;
+
+  if (dayItems.length && travelFromPrevious > maxWithinDayTravelMinutes) {
+    return null;
+  }
+
+  const slotStart = timeToMinutes(slotDefinitions.find((slot) => slot.name === slotName).start);
+  const startMinutes = previousEnd
+    ? Math.max(slotStart, previousEnd + travelFromPrevious + 20)
+    : slotStart;
+  const endMinutes = startMinutes + candidate.durationMinutes;
+
+  if (endMinutes > DAY_END_MINUTES) {
+    return null;
+  }
+
+  return { startMinutes, travelFromPrevious };
+};
+
+const nextBestCandidate = (pool, dayItems, slotName, tripInput, previousEnd) => {
   let best = null;
   let bestScore = -Infinity;
+  const maxWithinDayTravelMinutes = getMaxWithinDayTravel(tripInput);
 
   for (const candidate of pool) {
-    const travelPenalty = dayItems.length
-      ? estimateTravelMinutes(dayItems[dayItems.length - 1], candidate) * 0.25
-      : 0;
+    const timing = getCandidateTiming(candidate, dayItems, slotName, previousEnd, maxWithinDayTravelMinutes);
+    if (!timing) continue;
+
+    const companionBonus = dayItems.length
+      ? 0
+      : countFeasibleCompanions(candidate, pool, maxWithinDayTravelMinutes) * 9;
+    const travelPenalty = timing.travelFromPrevious * (timing.travelFromPrevious > 90 ? 0.7 : 0.35);
+    const lateStartPenalty = Math.max(0, timing.startMinutes - timeToMinutes(slotDefinitions.find((slot) => slot.name === slotName).start)) * 0.12;
 
     const projectedFatigue = dayItems.reduce((sum, item) => sum + item.fatigueScore, 0) + candidate.fatigueScore;
     const fatigueLimit = Number(tripInput.constraints?.maxDailyFatigue || 100);
@@ -57,10 +94,11 @@ const nextBestCandidate = (pool, dayItems, slotName, tripInput) => {
       areaPenalty(candidate, dayItems) -
       timeSlotPenalty(candidate, slotName, tripInput) -
       travelPenalty -
+      lateStartPenalty -
       fatiguePenalty;
 
     if (adjustedScore > bestScore) {
-      best = candidate;
+      best = { ...candidate, ...timing };
       bestScore = adjustedScore;
     }
   }
@@ -81,31 +119,19 @@ const optimizeItinerary = (rankedCandidates, tripInput) => {
     for (const slot of slotDefinitions) {
       if (!pool.length) break;
 
-      const candidate = nextBestCandidate(pool, dayItems, slot.name, tripInput);
+      const candidate = nextBestCandidate(pool, dayItems, slot.name, tripInput, previousEnd);
       if (!candidate) break;
 
       const candidateIndex = pool.findIndex((item) => item.id === candidate.id);
       pool.splice(candidateIndex, 1);
 
-      const travelFromPrevious = dayItems.length
-        ? estimateTravelMinutes(dayItems[dayItems.length - 1], candidate)
-        : 0;
-
-      estimatedTravelMinutes += travelFromPrevious;
-
-      const slotStart = timeToMinutes(slot.start);
-      const startMinutes = previousEnd
-        ? Math.max(slotStart, previousEnd + travelFromPrevious + 20)
-        : slotStart;
-
-      previousEnd = startMinutes + candidate.durationMinutes;
+      estimatedTravelMinutes += candidate.travelFromPrevious;
+      previousEnd = candidate.startMinutes + candidate.durationMinutes;
 
       dayItems.push({
         ...candidate,
         slot: slot.name,
-        startMinutes,
-        time: minutesToTime(startMinutes),
-        travelFromPrevious
+        time: minutesToTime(candidate.startMinutes)
       });
     }
 

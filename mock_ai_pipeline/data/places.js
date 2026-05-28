@@ -1,8 +1,16 @@
 const jaipurPlaceIntelligence = require("./jaipurPlaceIntelligence");
+const destinationPlaceIntelligence = require("./destinationPlaceIntelligence");
+const {
+  getDestinationImage,
+  getStaticMapImage
+} = require("./destinationVisualAssets");
 
 const toLegacyPlace = (place) => {
   const tags = unique([
     place.primaryCategory,
+    place.destination,
+    place.country,
+    ...(place.destinationAliases || []),
     ...place.subcategories,
     ...place.subcategories.map((tag) => tag.replace(/_/g, " ")),
     ...place.semanticTags,
@@ -17,7 +25,9 @@ const toLegacyPlace = (place) => {
     id: place.placeId,
     name: place.canonicalName,
     destination: place.destination,
-    area: jaipurPlaceIntelligence.localityClusters[place.localityClusterId]?.label || place.localityClusterId,
+    destinationAliases: place.destinationAliases || [],
+    country: place.country,
+    area: getAreaLabel(place),
     localityClusterId: place.localityClusterId,
     routeZone: place.routing.routeZone,
     type: place.primaryCategory,
@@ -46,6 +56,11 @@ const toLegacyPlace = (place) => {
     fatigueScore: place.fatigueScore,
     nearbyPlaceIds: place.routing.nearbyPlaceIds,
     backtrackingPenaltyGroup: place.routing.backtrackingPenaltyGroup,
+    image: getPlaceImage(place),
+    imageAttribution: place.visualAssets?.image?.attribution || null,
+    imageSource: place.visualAssets?.image?.source || null,
+    mapImage: place.visualAssets?.mapImage?.url || getStaticMapImage(place.coordinates),
+    destinationImage: place.visualAssets?.destinationHeroImage?.url || getDestinationImage(place.destination),
     placeIntelligence: place,
     description: buildLegacyDescription(place)
   };
@@ -65,13 +80,31 @@ const buildLegacyDescription = (place) => {
   return summary;
 };
 
+const getAreaLabel = (place) => {
+  return jaipurPlaceIntelligence.localityClusters[place.localityClusterId]?.label ||
+    place.routing?.clusterLabel ||
+    toTitle(place.localityClusterId);
+};
+
+const getPlaceImage = (place) => {
+  return place.visualAssets?.image?.url ||
+    place.visualAssets?.destinationHeroImage?.url ||
+    getDestinationImage(place.destination) ||
+    getStaticMapImage(place.coordinates);
+};
+
 const unique = (values) => [...new Set(values.filter(Boolean))];
 
 const average = (values) => {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 };
 
+const toTitle = (value) => String(value || "")
+  .replace(/[_-]/g, " ")
+  .replace(/\b\w/g, (char) => char.toUpperCase());
+
 const legacyJaipurPlaces = jaipurPlaceIntelligence.map(toLegacyPlace);
+const legacyDestinationPlaces = destinationPlaceIntelligence.map(toLegacyPlace);
 
 const otherPlaces = [
   {
@@ -292,6 +325,18 @@ const otherPlaces = [
   }
 ];
 
-const places = [...legacyJaipurPlaces, ...otherPlaces];
+const enrichFallbackPlace = (place) => ({
+  ...place,
+  destinationAliases: place.destinationAliases || [],
+  image: place.image || getDestinationImage(place.destination) || getStaticMapImage(place.coordinates),
+  mapImage: place.mapImage || getStaticMapImage(place.coordinates),
+  destinationImage: place.destinationImage || getDestinationImage(place.destination)
+});
+
+const places = [
+  ...legacyJaipurPlaces,
+  ...legacyDestinationPlaces,
+  ...otherPlaces.map(enrichFallbackPlace)
+];
 
 module.exports = places;

@@ -1,3 +1,5 @@
+import { getActivityImage } from "../utils/destinationImages";
+
 const GRID_SIZE = 20;
 const LANE_HEIGHT = 250;
 const LANE_GAP = 76;
@@ -107,7 +109,7 @@ export const buildWorkspaceFromItinerary = ({ itinerary, group }) => {
           roleLabel: roleCopy[primaryRole] || String(primaryRole).replace(/_/g, " "),
           fatigueScore: Number(activity.fatigueScore || 10),
           weatherScore: getWeatherScore(activity),
-          image: `https://picsum.photos/seed/${encodeURIComponent(activity.title || nodeId)}/640/420`,
+          image: getActivityImage(activity, group?.destination),
           semanticLinks: buildSemanticLinks(activity)
         }
       };

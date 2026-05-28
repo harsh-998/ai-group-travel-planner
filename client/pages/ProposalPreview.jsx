@@ -9,6 +9,7 @@ import {
     getGroup,
     rejectProposal
 } from "../src/api/groupApi";
+import { getActivityImage, getTripImage } from "../src/utils/destinationImages";
 
 const ProposalPreview = () => {
 
@@ -147,8 +148,12 @@ const ProposalPreview = () => {
 
                                         <div className="relative">
                                             <img
-                                                src={`https://picsum.photos/seed/${current.title}/800/400`}
+                                                src={getActivityImage(current, group?.destination)}
+                                                alt={current.title}
                                                 className="h-60 w-full object-cover"
+                                                onError={(e) => {
+                                                    e.currentTarget.src = current.mapImage || getTripImage(group) || "";
+                                                }}
                                             />
 
                                             <span
@@ -185,8 +190,12 @@ const ProposalPreview = () => {
 
                                         <div className="relative">
                                             <img
-                                                src={`https://picsum.photos/seed/${proposal.text}/800/400`}
+                                                src={getTripImage(group)}
+                                                alt={proposal.text}
                                                 className="h-60 w-full object-cover"
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display = "none";
+                                                }}
                                             />
 
                                             <span

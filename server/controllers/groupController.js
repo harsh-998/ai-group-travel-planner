@@ -1,5 +1,6 @@
 const Group = require("../models/GroupModel");
 const { regenerateItineraryWithAI } = require("../services/aiService");
+const { getDestinationImage } = require("../../mock_ai_pipeline/data/destinationVisualAssets");
 
 // 🔹 Generate unique join code
 const generateUniqueCode = async () => {
@@ -43,7 +44,7 @@ const createGroup = async (req, res) => {
 
         const joinCode = await generateUniqueCode();
 
-        const imageUrl = `https://source.unsplash.com/800x600/?${destination},travel&sig=${Math.random()}`;
+        const imageUrl = getDestinationImage(destination);
 
         const group = new Group({
             groupName,

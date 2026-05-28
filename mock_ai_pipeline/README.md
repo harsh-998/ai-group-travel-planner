@@ -52,6 +52,12 @@ Audit the curated Jaipur place-intelligence seed:
 node mock_ai_pipeline/runJaipurSeedAudit.js
 ```
 
+Audit the global destination seed:
+
+```bash
+node mock_ai_pipeline/runDestinationSeedAudit.js
+```
+
 Run partial regeneration scenarios:
 
 ```bash
@@ -96,10 +102,14 @@ The goal is to test WayFinder's decision logic before heavy implementation:
 - Evaluation metrics including retrieval coverage, average semantic score, top-candidate utilization, interest coverage, diversity, validation warnings, and quality gate status
 - Partial regeneration for activity replacement, day regeneration, budget changes, weather disruption, opening-hours conflicts, travel delays, and locked activity preservation
 - Jaipur seed dataset with 100+ rich place-intelligence records: locality clusters, trip roles, vibe tags, fatigue scores, visit windows, weather suitability, curated nearby relationships, and persona evaluation scenarios
+- Global destination mock dataset with 248 place-intelligence records across 31 destinations, grounded visuals, destination aliases, and exact map fallbacks
 
 ## Architecture Notes
 
+- AI/ML brain architecture: `mock_ai_pipeline/AI_ML_WORKFLOW_ARCHITECTURE.md`
 - AI pipeline blueprint: `docs/WAYFINDER_AI_PIPELINE_DOCUMENTATION.md`
 - Partial regeneration architecture: `mock_ai_pipeline/PARTIAL_REGENERATION_ARCHITECTURE.md`
 - Jaipur seed data: `mock_ai_pipeline/data/jaipurPlaceIntelligence.js`
+- Global destination seed data: `mock_ai_pipeline/data/destinationPlaceIntelligence.js`
+- Destination visual assets: `mock_ai_pipeline/data/destinationVisualAssets.js`
 - Jaipur evaluation personas: `mock_ai_pipeline/data/jaipurEvaluationPersonas.js`

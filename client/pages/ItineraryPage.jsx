@@ -7,6 +7,7 @@ import ValidationNotice from "../components/planning/ValidationNotice";
 import { getMe } from "../src/api/authApi";
 import { getGroup } from "../src/api/groupApi";
 import { generateItinerary, partialRegenerate } from "../src/api/planningApi";
+import { getActivityImage } from "../src/utils/destinationImages";
 
 import {
   HiOutlineViewGrid,
@@ -275,10 +276,11 @@ const Itinerary = () => {
                         <div className="flex">
                           <div className="w-[280px] bg-gray-200">
                             <img
-                              src={`https://picsum.photos/seed/${group.destination}-${act.title}-${i}/800/600`}
+                              src={getActivityImage(act, group?.destination)}
+                              alt={act.title}
                               className="w-full h-full object-cover"
                               onError={(e) => {
-                                e.target.src = "https://picsum.photos/800/600";
+                                e.currentTarget.src = act.mapImage || group?.image || "";
                               }}
                             />
                           </div>

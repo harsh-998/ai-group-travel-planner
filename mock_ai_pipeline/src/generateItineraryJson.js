@@ -33,6 +33,11 @@ const generateItineraryJson = ({ tripInput, optimizedDays, retrievalMeta }) => {
       weatherSensitivity: item.weatherSensitivity,
       weatherSuitability: item.weatherSuitability,
       nearbyPlaceIds: item.nearbyPlaceIds,
+      image: item.image,
+      imageAttribution: item.imageAttribution,
+      imageSource: item.imageSource,
+      mapImage: item.mapImage,
+      destinationImage: item.destinationImage,
       score: item.score,
       semanticScore: item.semanticScore,
       source: "semantic_retrieval",
@@ -49,6 +54,11 @@ const generateItineraryJson = ({ tripInput, optimizedDays, retrievalMeta }) => {
   const rankingConfidence = calculateRankingConfidence(days);
   const validationQuality = 0.95;
   const retrievalCoverage = retrievalMeta.retrievalCoverage;
+  const destinationImage = days
+    .flatMap((day) => day.activities)
+    .find((activity) => activity.destinationImage || activity.image)?.destinationImage ||
+    days.flatMap((day) => day.activities).find((activity) => activity.image)?.image ||
+    null;
 
   const confidenceScore =
     groundingStrength * 0.3 +
@@ -60,6 +70,7 @@ const generateItineraryJson = ({ tripInput, optimizedDays, retrievalMeta }) => {
   return {
     itineraryId: `mock_${Date.now()}`,
     destination,
+    destinationImage,
     input: tripInput,
     optimizationMode,
     days,
